@@ -17,14 +17,14 @@ namespace WinFormsApp1
     public partial class MainForm : Form
     {
         private string rootPath = @"C:/";
-        private DialogForm dialog;
+        private readonly DialogForm dialog;
 
         private bool treeViewSelected = false;
         private bool listViewSelected = false;
 
         private bool listViewFocus = false;
         private bool treeViewFocus = true;
-        private TreeNode root;
+        private readonly TreeNode root;
 
         public MainForm()
         {
