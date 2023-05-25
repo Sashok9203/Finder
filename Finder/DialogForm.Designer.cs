@@ -107,6 +107,7 @@
             MinimumSize = new Size(355, 175);
             Name = "DialogForm";
             ShowIcon = false;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "New Folder";
             ResumeLayout(false);
             PerformLayout();

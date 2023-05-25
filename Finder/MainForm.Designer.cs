@@ -52,6 +52,7 @@
             viewToolStripComboBox = new ToolStripComboBox();
             label1 = new Label();
             rootTextBox = new TextBox();
+            visibleCheckBox = new CheckBox();
             ((System.ComponentModel.ISupportInitialize)fileIconPictureBox).BeginInit();
             groupBox1.SuspendLayout();
             groupBox2.SuspendLayout();
@@ -250,6 +251,7 @@
             copyToolStripButton.Name = "copyToolStripButton";
             copyToolStripButton.Size = new Size(36, 36);
             copyToolStripButton.Text = "Copy Selected";
+            copyToolStripButton.Click += toolStripButtons_Click;
             // 
             // toolStripSeparator2
             // 
@@ -291,14 +293,27 @@
             rootTextBox.Location = new Point(80, 57);
             rootTextBox.Name = "rootTextBox";
             rootTextBox.ReadOnly = true;
-            rootTextBox.Size = new Size(179, 23);
+            rootTextBox.Size = new Size(185, 23);
             rootTextBox.TabIndex = 10;
+            // 
+            // visibleCheckBox
+            // 
+            visibleCheckBox.AutoSize = true;
+            visibleCheckBox.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point);
+            visibleCheckBox.Location = new Point(277, 57);
+            visibleCheckBox.Name = "visibleCheckBox";
+            visibleCheckBox.Size = new Size(121, 21);
+            visibleCheckBox.TabIndex = 11;
+            visibleCheckBox.Text = "Show hiden files";
+            visibleCheckBox.UseVisualStyleBackColor = true;
+            visibleCheckBox.CheckedChanged += visibleCheckBox_CheckedChanged;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(811, 505);
+            Controls.Add(visibleCheckBox);
             Controls.Add(rootTextBox);
             Controls.Add(label1);
             Controls.Add(treeView);
@@ -341,5 +356,6 @@
         private Label label1;
         private TextBox rootTextBox;
         private TreeView treeView;
+        private CheckBox visibleCheckBox;
     }
 }

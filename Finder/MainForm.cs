@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Microsoft.VisualBasic.FileIO;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
+using System.Linq.Expressions;
 
 namespace WinFormsApp1
 {
@@ -87,7 +88,7 @@ namespace WinFormsApp1
                 string tmp = Path.GetFileNameWithoutExtension(rootPath);
                 root.Text = tmp == "" ? rootPath : tmp;
                 root.Tag = rootPath;
-                treeView_AfterSelect(root,new TreeViewEventArgs(root));
+                treeView_AfterSelect(root, new TreeViewEventArgs(root));
             }
         }
 
@@ -120,7 +121,7 @@ namespace WinFormsApp1
 
         private void addToolStripButton_Click(object sender, EventArgs e)
         {
-            string tmpPath = /*treeView.SelectedNode == null ? rootPath :*/ treeView.SelectedNode.Tag.ToString() ?? "";
+            string tmpPath = treeView.SelectedNode.Tag.ToString() ?? "";
             if (dialog.ShowDialog(tmpPath, DialogAction.Create) == DialogResult.OK)
             {
                 tmpPath = Path.Combine(tmpPath, dialog.Result ?? "");
@@ -181,6 +182,28 @@ namespace WinFormsApp1
                     mbString = "Rename";
                     break;
 
+                case "copyToolStripButton":
+                    fileAction = () =>
+                    {
+                        string ext = Path.GetExtension(fileListView.SelectedItems[0].Text);
+                        SaveFileDialog saveFileDialog = new()
+                        {
+                            Filter = $"{ext[1..]} files (*{ext})|*{ext}",
+                            RestoreDirectory = true,
+                            FileName = name
+                        };
+                        if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                            File.Copy(Path.Combine(tmpPath ?? "", name ?? ""), saveFileDialog.FileName ?? "",true);
+                    };
+                    folderAction = () =>
+                    {
+                        FolderBrowserDialog fbd = new();
+                        if(fbd.ShowDialog()!= DialogResult.OK) return;
+                        FileSystem.CopyDirectory(tmpPath ?? "", Path.Combine(fbd.SelectedPath, name ?? ""),UIOption.AllDialogs,UICancelOption.DoNothing);
+                    };
+                    mbString = "Copy";
+                    break;
+
                 default: return;
             }
 
@@ -202,7 +225,7 @@ namespace WinFormsApp1
 
             if (MessageBox.Show($"Are you sure you want to {mbString} \"{name}\"", mbString, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 try { action.Invoke(); }
-                catch (Exception) { MessageBox.Show($"Unable to {mbString} \"{name}\"", mbString); }
+                catch (Exception ex) { MessageBox.Show($"Unable to {mbString} \"{name}\"\n {ex.Message}", mbString); }
         }
 
         private void viewToolStripComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -264,6 +287,7 @@ namespace WinFormsApp1
                 listViewSelected = false;
                 foreach (var item in fInfo)
                 {
+                    if (!visibleCheckBox.Checked && item.Attributes.HasFlag(FileAttributes.Hidden)) continue;
                     ListViewItem item2 = new(item.Name)
                     {
                         ImageIndex = getImageIndex(item.Extension),
@@ -276,6 +300,9 @@ namespace WinFormsApp1
             catch { }
         }
 
-       
+        private void visibleCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            treeView_AfterSelect(sender, new TreeViewEventArgs(treeView.SelectedNode));
+        }
     }
 }
