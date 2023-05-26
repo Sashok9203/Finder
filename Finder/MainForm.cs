@@ -11,12 +11,15 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Microsoft.VisualBasic.FileIO;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using System.Linq.Expressions;
+using System.IO;
+using System.ComponentModel;
 
 namespace WinFormsApp1
 {
     public partial class MainForm : Form
     {
-        private string rootPath = @"C:/";
+        private ImageList tmpIList;
+        private string rootPath;
         private readonly DialogForm dialog;
 
         private bool treeViewSelected = false;
@@ -28,9 +31,11 @@ namespace WinFormsApp1
 
         public MainForm()
         {
+            tmpIList = new();
+            rootPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             dialog = new();
             InitializeComponent();
-            root = new TreeNode(rootPath)
+            root = new TreeNode(Path.GetFileNameWithoutExtension(rootPath))
             {
                 Tag = rootPath,
                 ImageIndex = 0
@@ -40,6 +45,7 @@ namespace WinFormsApp1
 
             LoadFolders(rootPath, root.Nodes, 2);
             rootTextBox.Text = rootPath;
+
         }
 
         private void LoadFolders(string? path, TreeNodeCollection collection, int level)
@@ -52,6 +58,7 @@ namespace WinFormsApp1
             {
                 foreach (var dir in dInfos)
                 {
+                    if (!visibleCheckBox.Checked && dir.Attributes.HasFlag(FileAttributes.Hidden)) continue;
                     TreeNode node = new(dir.Name);
                     node.Tag = dir.FullName;
                     collection.Add(node);
@@ -72,8 +79,6 @@ namespace WinFormsApp1
             foreach (TreeNode item in e.Node.Nodes)
                 LoadFolders(item.Tag.ToString(), item.Nodes, 1);
         }
-
-
 
         private void LoadButton_Click(object sender, EventArgs e)
         {
@@ -107,16 +112,18 @@ namespace WinFormsApp1
             {
                 listViewSelected = true;
                 ButtonsEnable();
-                StringBuilder sb = new();
-                fileIconPictureBox.Image = fileImageListLarge.Images[fileListView.SelectedItems[0].ImageIndex];
-                FileInfo fi = new(fileListView.SelectedItems[0].Tag.ToString() ?? "");
-                sb.AppendLine(fi.Name);
-                sb.AppendLine(fi.FullName);
-                sb.AppendLine(fi.Extension);
-                sb.AppendLine($"{fi.CreationTime}");
-                sb.AppendLine(fi.LastAccessTime.ToLongDateString());
-                fileInfoBox.Text = sb.ToString();
+                ListViewItem lvi = fileListView.SelectedItems[0];
+                fileIconPictureBox.Image = fileImageListLarge.Images[lvi.ImageIndex];
+                FileInfo fi = new(Path.Combine(lvi.Tag.ToString() ?? "", lvi.Text));
+                nameLabel.Text = $"{nameLabel.Tag}  \"{Path.GetFileNameWithoutExtension(fi.Name)}\"";
+                extLabel.Text = $"{extLabel.Tag}  \"{(Path.GetExtension(fi.Name).Length > 0 ? Path.GetExtension(fi.Name)[1..].ToUpper() : " ")}\"";
+                pathLabel.Text = $"{pathLabel.Tag}  \"{fi.Directory?.FullName}\"";
+                (double, string) val = getSizeFormat(fi.Length);
+                sizeLabel.Text = $"{sizeLabel.Tag}  {val.Item1} {val.Item2}";
+                lastATimeLabel.Text = $"{lastATimeLabel.Tag}  {fi.LastAccessTime}";
+                lastMTimeLAble.Text = $"{lastMTimeLAble.Tag}  {fi.LastWriteTime}";
             }
+            else clearInfoWindow();
         }
 
         private void addToolStripButton_Click(object sender, EventArgs e)
@@ -175,9 +182,9 @@ namespace WinFormsApp1
                     folderAction = () =>
                     {
                         if (dialog.ShowDialog(tmpPath, DialogAction.Rename) != DialogResult.OK) return;
-                        Directory.Move(tmpPath ?? "", Path.Combine(treeView.SelectedNode.Parent.FullPath ?? "", dialog.Result ?? ""));
+                        FileSystem.RenameDirectory(tmpPath ?? "", dialog.Result ?? "");
                         treeView.SelectedNode.Text = dialog.Result;
-                        treeView.SelectedNode.Tag = treeView.SelectedNode.FullPath;
+                        treeView.SelectedNode.Tag = Path.Combine(treeView.SelectedNode.Parent.Tag.ToString() ?? "", dialog.Result ?? "");
                     };
                     mbString = "Rename";
                     break;
@@ -193,13 +200,13 @@ namespace WinFormsApp1
                             FileName = name
                         };
                         if (saveFileDialog.ShowDialog() == DialogResult.OK)
-                            File.Copy(Path.Combine(tmpPath ?? "", name ?? ""), saveFileDialog.FileName ?? "",true);
+                            File.Copy(Path.Combine(tmpPath ?? "", name ?? ""), saveFileDialog.FileName ?? "", true);
                     };
                     folderAction = () =>
                     {
                         FolderBrowserDialog fbd = new();
-                        if(fbd.ShowDialog()!= DialogResult.OK) return;
-                        FileSystem.CopyDirectory(tmpPath ?? "", Path.Combine(fbd.SelectedPath, name ?? ""),UIOption.AllDialogs,UICancelOption.DoNothing);
+                        if (fbd.ShowDialog() != DialogResult.OK) return;
+                        FileSystem.CopyDirectory(tmpPath ?? "", Path.Combine(fbd.SelectedPath, name ?? ""), UIOption.AllDialogs, UICancelOption.DoNothing);
                     };
                     mbString = "Copy";
                     break;
@@ -230,6 +237,9 @@ namespace WinFormsApp1
 
         private void viewToolStripComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            tileIconSizeToolStripComboBox.Enabled = viewToolStripComboBox.Text == "Tile";
+            fileListView.LargeImageList = tileIconSizeToolStripComboBox.Enabled ? tmpIList : fileImageListLarge;
+            if (viewToolStripComboBox.Text == "Details") detailsListSet();
             fileListView.View = Enum.Parse<View>(viewToolStripComboBox.Text);
         }
 
@@ -284,6 +294,7 @@ namespace WinFormsApp1
             {
                 FileInfo[] fInfo = dInfo.GetFiles();
                 fileListView.Items.Clear();
+                clearInfoWindow();
                 listViewSelected = false;
                 foreach (var item in fInfo)
                 {
@@ -298,11 +309,75 @@ namespace WinFormsApp1
                 }
             }
             catch { }
+            if (viewToolStripComboBox.Text == "Details") detailsListSet();
         }
 
         private void visibleCheckBox_CheckedChanged(object sender, EventArgs e)
         {
+
+            DirectoryInfo dInfo = new(root.Tag.ToString() ?? "");
+            if (dInfo.Exists && dInfo.GetDirectories().Any(n => n.Attributes.HasFlag(FileAttributes.Hidden)))
+            {
+                root.Nodes.Clear();
+                LoadFolders(rootPath, root.Nodes, 2);
+                treeView.SelectedNode = root;
+                treeView.Select();
+            }
+            else
+            {
+                dInfo = new(treeView.SelectedNode.Tag.ToString() ?? "");
+                if (!dInfo.Exists || !dInfo.GetFiles().Any(n => n.Attributes.HasFlag(FileAttributes.Hidden))) return;
+            }
             treeView_AfterSelect(sender, new TreeViewEventArgs(treeView.SelectedNode));
+        }
+
+        private void detailsListSet()
+        {
+            string[] exp = { "B", "Kb", "Mb", "Gb" };
+            int i;
+            FileInfo fi;
+            foreach (ListViewItem item in fileListView.Items)
+            {
+                fi = new FileInfo(Path.Combine(item.Tag.ToString() ?? "", item.Text));
+                item.SubItems.Add($"File \"{(fi.Extension.Length > 0 ? fi.Extension[1..].ToUpper() : "")}\"");
+                item.SubItems.Add($"{fi.LastWriteTime}");
+
+                (double, string) val = getSizeFormat(fi.Length);
+                item.SubItems.Add($"{val.Item1} {val.Item2}");
+            }
+        }
+
+        private void tileIconSizeToolStripComboBox_TextChanged(object sender, EventArgs e)
+        {
+            tmpIList = new();
+            tmpIList.ImageSize = new(tileIconSizeToolStripComboBox.SelectedIndex * 4 + 16, tileIconSizeToolStripComboBox.SelectedIndex * 4 + 16);
+            tmpIList.ColorDepth = ColorDepth.Depth32Bit;
+            foreach (Image item in fileImageListLarge.Images)
+                tmpIList.Images.Add(item);
+            fileListView.LargeImageList = tmpIList;
+        }
+
+        private void clearInfoWindow()
+        {
+            nameLabel.Text = nameLabel.Tag?.ToString();
+            extLabel.Text = extLabel.Tag?.ToString();
+            pathLabel.Text = pathLabel.Tag?.ToString();
+            sizeLabel.Text = sizeLabel.Tag?.ToString();
+            lastATimeLabel.Text = lastATimeLabel.Tag?.ToString();
+            lastMTimeLAble.Text = lastMTimeLAble.Tag?.ToString();
+        }
+
+        private (double, string) getSizeFormat(decimal size)
+        {
+            string[] exp = { "B", "Kb", "Mb", "Gb" };
+            int i;
+
+            for (i = 0; i < exp.Length; i++)
+            {
+                if (size < 1024) break;
+                else size = size / 1024;
+            }
+            return ((double)Math.Round(size, 2), exp[i]);
         }
     }
 }

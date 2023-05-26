@@ -35,9 +35,18 @@
             fileImageListSmall = new ImageList(components);
             treeView = new TreeView();
             fileListView = new ListView();
-            fileInfoBox = new TextBox();
+            NameColumnHeader = new ColumnHeader();
+            extColumnHeader = new ColumnHeader();
+            columnHeader1 = new ColumnHeader();
+            sizeColumnHeader = new ColumnHeader();
             fileIconPictureBox = new PictureBox();
             groupBox1 = new GroupBox();
+            lastATimeLabel = new Label();
+            lastMTimeLAble = new Label();
+            sizeLabel = new Label();
+            pathLabel = new Label();
+            extLabel = new Label();
+            nameLabel = new Label();
             groupBox2 = new GroupBox();
             groupBox3 = new GroupBox();
             toolStrip1 = new ToolStrip();
@@ -50,6 +59,9 @@
             toolStripSeparator2 = new ToolStripSeparator();
             toolStripLabel1 = new ToolStripLabel();
             viewToolStripComboBox = new ToolStripComboBox();
+            toolStripSeparator3 = new ToolStripSeparator();
+            tileSizetoolStripLabel = new ToolStripLabel();
+            tileIconSizeToolStripComboBox = new ToolStripComboBox();
             label1 = new Label();
             rootTextBox = new TextBox();
             visibleCheckBox = new CheckBox();
@@ -123,6 +135,7 @@
             // 
             // fileListView
             // 
+            fileListView.Columns.AddRange(new ColumnHeader[] { NameColumnHeader, extColumnHeader, columnHeader1, sizeColumnHeader });
             fileListView.GridLines = true;
             fileListView.GroupImageList = fileImageListLarge;
             fileListView.LargeImageList = fileImageListLarge;
@@ -138,18 +151,31 @@
             fileListView.SelectedIndexChanged += listView1_SelectedIndexChanged;
             fileListView.Enter += fileListView_Enter;
             // 
-            // fileInfoBox
+            // NameColumnHeader
             // 
-            fileInfoBox.Location = new Point(6, 87);
-            fileInfoBox.Multiline = true;
-            fileInfoBox.Name = "fileInfoBox";
-            fileInfoBox.ReadOnly = true;
-            fileInfoBox.Size = new Size(243, 302);
-            fileInfoBox.TabIndex = 3;
+            NameColumnHeader.Text = "Name";
+            NameColumnHeader.Width = 150;
+            // 
+            // extColumnHeader
+            // 
+            extColumnHeader.Text = "Type";
+            extColumnHeader.Width = 100;
+            // 
+            // columnHeader1
+            // 
+            columnHeader1.DisplayIndex = 3;
+            columnHeader1.Text = "Last Change";
+            columnHeader1.Width = 150;
+            // 
+            // sizeColumnHeader
+            // 
+            sizeColumnHeader.DisplayIndex = 2;
+            sizeColumnHeader.Text = "Size";
+            sizeColumnHeader.Width = 100;
             // 
             // fileIconPictureBox
             // 
-            fileIconPictureBox.Location = new Point(103, 33);
+            fileIconPictureBox.Location = new Point(97, 24);
             fileIconPictureBox.Name = "fileIconPictureBox";
             fileIconPictureBox.Size = new Size(48, 48);
             fileIconPictureBox.TabIndex = 4;
@@ -157,8 +183,13 @@
             // 
             // groupBox1
             // 
+            groupBox1.Controls.Add(lastATimeLabel);
+            groupBox1.Controls.Add(lastMTimeLAble);
+            groupBox1.Controls.Add(sizeLabel);
+            groupBox1.Controls.Add(pathLabel);
+            groupBox1.Controls.Add(extLabel);
+            groupBox1.Controls.Add(nameLabel);
             groupBox1.Controls.Add(fileIconPictureBox);
-            groupBox1.Controls.Add(fileInfoBox);
             groupBox1.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point);
             groupBox1.Location = new Point(532, 80);
             groupBox1.Name = "groupBox1";
@@ -166,6 +197,66 @@
             groupBox1.TabIndex = 5;
             groupBox1.TabStop = false;
             groupBox1.Text = "File information";
+            // 
+            // lastATimeLabel
+            // 
+            lastATimeLabel.AutoSize = true;
+            lastATimeLabel.Location = new Point(11, 316);
+            lastATimeLabel.Name = "lastATimeLabel";
+            lastATimeLabel.Size = new Size(105, 17);
+            lastATimeLabel.TabIndex = 10;
+            lastATimeLabel.Tag = "Last access time:";
+            lastATimeLabel.Text = "Last access time:";
+            // 
+            // lastMTimeLAble
+            // 
+            lastMTimeLAble.AutoSize = true;
+            lastMTimeLAble.Location = new Point(11, 273);
+            lastMTimeLAble.Name = "lastMTimeLAble";
+            lastMTimeLAble.Size = new Size(107, 17);
+            lastMTimeLAble.TabIndex = 9;
+            lastMTimeLAble.Tag = "Last modify time:";
+            lastMTimeLAble.Text = "Last modify time:";
+            // 
+            // sizeLabel
+            // 
+            sizeLabel.AutoSize = true;
+            sizeLabel.Location = new Point(11, 187);
+            sizeLabel.Name = "sizeLabel";
+            sizeLabel.Size = new Size(38, 17);
+            sizeLabel.TabIndex = 8;
+            sizeLabel.Tag = "Size :";
+            sizeLabel.Text = "Size :";
+            // 
+            // pathLabel
+            // 
+            pathLabel.AutoSize = true;
+            pathLabel.Location = new Point(11, 230);
+            pathLabel.Name = "pathLabel";
+            pathLabel.Size = new Size(40, 17);
+            pathLabel.TabIndex = 7;
+            pathLabel.Tag = "Path :";
+            pathLabel.Text = "Path :";
+            // 
+            // extLabel
+            // 
+            extLabel.AutoSize = true;
+            extLabel.Location = new Point(11, 144);
+            extLabel.Name = "extLabel";
+            extLabel.Size = new Size(70, 17);
+            extLabel.TabIndex = 6;
+            extLabel.Tag = "Extension :";
+            extLabel.Text = "Extension :";
+            // 
+            // nameLabel
+            // 
+            nameLabel.AutoSize = true;
+            nameLabel.Location = new Point(11, 101);
+            nameLabel.Name = "nameLabel";
+            nameLabel.Size = new Size(70, 17);
+            nameLabel.TabIndex = 5;
+            nameLabel.Tag = "File name :";
+            nameLabel.Text = "File name :";
             // 
             // groupBox2
             // 
@@ -191,7 +282,7 @@
             // toolStrip1
             // 
             toolStrip1.ImageScalingSize = new Size(32, 32);
-            toolStrip1.Items.AddRange(new ToolStripItem[] { openToolStripButton, addToolStripButton, delToolStripButton, toolStripSeparator1, renameToolStripButton, copyToolStripButton, toolStripSeparator2, toolStripLabel1, viewToolStripComboBox });
+            toolStrip1.Items.AddRange(new ToolStripItem[] { openToolStripButton, addToolStripButton, delToolStripButton, toolStripSeparator1, renameToolStripButton, copyToolStripButton, toolStripSeparator2, toolStripLabel1, viewToolStripComboBox, toolStripSeparator3, tileSizetoolStripLabel, tileIconSizeToolStripComboBox });
             toolStrip1.Location = new Point(0, 0);
             toolStrip1.Name = "toolStrip1";
             toolStrip1.Size = new Size(811, 39);
@@ -278,6 +369,28 @@
             viewToolStripComboBox.ToolTipText = "Files window view stile\r\n";
             viewToolStripComboBox.SelectedIndexChanged += viewToolStripComboBox_SelectedIndexChanged;
             // 
+            // toolStripSeparator3
+            // 
+            toolStripSeparator3.Name = "toolStripSeparator3";
+            toolStripSeparator3.Size = new Size(6, 39);
+            // 
+            // tileSizetoolStripLabel
+            // 
+            tileSizetoolStripLabel.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold, GraphicsUnit.Point);
+            tileSizetoolStripLabel.Name = "tileSizetoolStripLabel";
+            tileSizetoolStripLabel.Size = new Size(85, 36);
+            tileSizetoolStripLabel.Text = "Tile Icon Size";
+            // 
+            // tileIconSizeToolStripComboBox
+            // 
+            tileIconSizeToolStripComboBox.AutoCompleteMode = AutoCompleteMode.Suggest;
+            tileIconSizeToolStripComboBox.AutoCompleteSource = AutoCompleteSource.ListItems;
+            tileIconSizeToolStripComboBox.Items.AddRange(new object[] { "16 x 16", "20 x 20", "24 x 24", "28 x 28", "32 x 32", "36 x 36", "40 x 40", "44 x 44", "48 x 48" });
+            tileIconSizeToolStripComboBox.Name = "tileIconSizeToolStripComboBox";
+            tileIconSizeToolStripComboBox.Size = new Size(75, 39);
+            tileIconSizeToolStripComboBox.Text = "48 x 48";
+            tileIconSizeToolStripComboBox.TextChanged += tileIconSizeToolStripComboBox_TextChanged;
+            // 
             // label1
             // 
             label1.AutoSize = true;
@@ -302,9 +415,9 @@
             visibleCheckBox.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point);
             visibleCheckBox.Location = new Point(277, 57);
             visibleCheckBox.Name = "visibleCheckBox";
-            visibleCheckBox.Size = new Size(121, 21);
+            visibleCheckBox.Size = new Size(98, 21);
             visibleCheckBox.TabIndex = 11;
-            visibleCheckBox.Text = "Show hiden files";
+            visibleCheckBox.Text = "Show hiden ";
             visibleCheckBox.UseVisualStyleBackColor = true;
             visibleCheckBox.CheckedChanged += visibleCheckBox_CheckedChanged;
             // 
@@ -338,7 +451,6 @@
         private ImageList fileImageListLarge;
         private ImageList fileImageListSmall;
         private ListView fileListView;
-        private TextBox fileInfoBox;
         private PictureBox fileIconPictureBox;
         private GroupBox groupBox1;
         private GroupBox groupBox2;
@@ -357,5 +469,18 @@
         private TextBox rootTextBox;
         private TreeView treeView;
         private CheckBox visibleCheckBox;
+        private ColumnHeader NameColumnHeader;
+        private ColumnHeader extColumnHeader;
+        private ColumnHeader sizeColumnHeader;
+        private ColumnHeader columnHeader1;
+        private ToolStripLabel tileSizetoolStripLabel;
+        private ToolStripComboBox tileIconSizeToolStripComboBox;
+        private ToolStripSeparator toolStripSeparator3;
+        private Label nameLabel;
+        private Label extLabel;
+        private Label pathLabel;
+        private Label lastMTimeLAble;
+        private Label sizeLabel;
+        private Label lastATimeLabel;
     }
 }
